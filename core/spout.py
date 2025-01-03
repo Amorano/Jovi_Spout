@@ -202,46 +202,6 @@ def cv2tensor_full(image: TYPE_IMAGE, matte:TYPE_PIXEL=(0,0,0,255)) -> Tuple[tor
 # === CLASS SUPPORT ===
 # ==============================================================================
 
-class SpoutReceiver():
-    """Capture from SpoutGL stream."""
-
-    def __init__(self, url:str, fps:float=30) -> None:
-        self.__url = url
-        self.__blank = np.ones((32, 32, 4), dtype=np.uint8) * 128
-
-    def frame(self, count:int=1) -> np.array:
-        with SpoutGL.SpoutReceiver() as receiver:
-            active = receiver.getActiveSender()
-            sender_info = receiver.getSenderInfo(active)
-            width = sender_info.width
-            height = sender_info.height
-
-            frames = [self.__blank] * count
-            receiver.setReceiverName(active)
-            #sender_info = receiver.getSenderInfo(active)
-            buffer = None
-            for x in range(count):
-
-                result = receiver.receiveImage(buffer, GL.GL_RGBA, False, 0)
-                if receiver.isUpdated():
-                    width = receiver.getSenderWidth()
-                    height = receiver.getSenderHeight()
-                    buffer = array.array('B', repeat(255, width * height * 4))
-
-                if buffer and result: # and not SpoutGL.helpers.isBufferEmpty(buffer):
-                    frames[x] = np.asarray(buffer, dtype=np.uint8).reshape((height, width, 4))
-                receiver.waitFrameSync(active, 100)
-        return frames
-
-    @property
-    def url(self) -> str:
-        return self.__url
-
-    @url.setter
-    def url(self, url:str) -> None:
-        # self.__spout.setReceiverName(url)
-        self.__url = url
-
 class SpoutSender:
     def __init__(self, host: str='', fps:int=30, frame:TYPE_PIXEL=None) -> None:
         self.__fps = self.__width = self.__height = 0
@@ -314,9 +274,10 @@ Capture frames from Spout streams. It supports batch processing, allowing multip
         d = super().INPUT_TYPES()
         d = deep_merge(d, {
             "required": {
-                'url': ("STRING", {"default": "Spout Sender", "dynamicPrompts": False, "tooltip": "source of the Spout stream to capture."}),
+                'url': ("STRING", {"default": "Spout Graphics Sender", "dynamicPrompts": False, "tooltip": "source of the Spout stream to capture."}),
                 'width': ("INT", {"default": 512, "min": 32, "max": 2048, "tooltip":"width of image after reading from Spout stream."}),
                 'height': ("INT", {"default": 512, "min": 32, "max": 2048, "tooltip":"height of image after reading from Spout stream."}),
+                'fps': ("INT", {"default": 30, "min": 1, "max": 60, "tooltip":"frames per second to capture."}),
                 'sample': (EnumInterpolation._member_names_, {"default": EnumInterpolation.LANCZOS4.name, "tooltip":"If the images is smaller or larger, the interpolation method to rescale the stream image."}),
                 'batch': ("INT", {"default": 1, "min": 1, "max": 1024, "tooltip": "collect multiple frames at once."}),
             }
@@ -327,16 +288,48 @@ Capture frames from Spout streams. It supports batch processing, allowing multip
     def IS_CHANGED(cls, **kw) -> float:
         return float('nan')
 
-    def __init__(self, *arg, **kw) -> None:
-        self.__device = SpoutReceiver("alex")
-
     def run(self, **kw) -> Tuple[torch.Tensor, ...]:
-        self.__device.url = kw['url']
+        delta = 1. / kw['fps']
         count = kw['batch']
         sample = EnumInterpolation[kw['sample']].value
-        images = [cv2tensor_full(cv2.resize(i, (kw['width'], kw['height']),
-                                            interpolation=sample)) for i in self.__device.frame(count)]
-        return [torch.stack(i) for i in zip(*images)]
+        blank = np.zeros((kw['width'], kw['height'], 4), dtype=np.uint8)
+        frames = [blank] * count
+        width = height = 0
+        buffer = None
+        idx = 0
+        pbar = ProgressBar(count)
+        with SpoutGL.SpoutReceiver() as receiver:
+            receiver.setReceiverName(kw['url'])
+            while idx <= count:
+                waste = time.perf_counter() + delta
+                receiver.waitFrameSync(kw['url'], 0)
+                if buffer is None or receiver.isUpdated():
+                    width = receiver.getSenderWidth()
+                    height = receiver.getSenderHeight()
+                    buffer = array.array('B', repeat(0, width * height * 4))
+                    # logger.debug(f"{width} x {height}")
+                    # logger.debug("changed")
+
+                result = receiver.receiveImage(buffer, GL.GL_RGBA, False, 0)
+                if result:
+                    if SpoutGL.helpers.isBufferEmpty(buffer):
+                        logger.debug("empty")
+                        continue
+
+                    if idx > 0:
+                        frames[idx-1] = np.asarray(buffer, dtype=np.uint8).reshape((height, width, 4))
+                    waste = max(waste - time.perf_counter(), 0)
+                    # logger.debug(f"{idx-1} - {waste}")
+                    idx += 1
+                    if count > 1:
+                        time.sleep(waste)
+                buffer = None
+                receiver.setFrameSync(kw['url'])
+                pbar.update_absolute(idx)
+
+        frames = [cv2tensor_full(cv2.resize(i, (kw['width'], kw['height']),
+                                            interpolation=sample)) for i in frames]
+        return [torch.stack(i) for i in zip(*frames)]
 
 class SpoutWriterNode(JOVBaseNode):
     NAME = "SPOUT WRITER (JOV_SP) 🎥"
