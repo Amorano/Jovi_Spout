@@ -1,0 +1,24 @@
+[project]
+name = "jovi_spout"
+description = "."
+version = "1.0.0"
+license = { file = "LICENSE" }
+dependencies = [
+    "aenum",
+    "loguru",
+    "numpy>=1.26.4,<2.0.0; python_version < '3.12'",
+    "numpy>=2.0.0; python_version > '3.11'",
+    "opencv-contrib-python",
+    "Pillow",
+    "PyOpenGL",
+    "PyOpenGL-accelerate; python_version < '3.12'",
+    "SpoutGL; platform_system==\"Windows\"",
+]
+
+[project.urls]
+Repository = "https://github.com/Amorano/Jovi_Spout"
+
+[tool.comfy]
+PublisherId = "amorano"
+DisplayName = "Jovi_Spout"
+Icon = ""
