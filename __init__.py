@@ -73,6 +73,10 @@ class JOVBaseNode:
     FUNCTION = "run"
 
     @classmethod
+    def IS_CHANGED(cls, **kw) -> float:
+        return float('nan')
+
+    @classmethod
     def VALIDATE_INPUTS(cls, *arg, **kw) -> bool:
         return True
 

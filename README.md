@@ -30,7 +30,7 @@
 
 **2024/01/03** @1.0.0:
 * initial release
-* reworked [Jovi_Spout](https://github.com/amorano/Jovi_Spout) Spout support into standalone repository
+* reworked [Jovimetrix](https://github.com/amorano/Jovimetrix) Spout support into standalone repository
 
 # INSTALLATION
 

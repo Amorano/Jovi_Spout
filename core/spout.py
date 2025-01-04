@@ -19,8 +19,7 @@ from loguru import logger
 
 from comfy.utils import ProgressBar
 
-from Jovi_Spout import JOV_TYPE_IMAGE, \
-    JOVBaseNode, JOVImageNode, deep_merge
+from Jovi_Spout import JOV_TYPE_IMAGE, JOVBaseNode, JOVImageNode, deep_merge
 
 # ==============================================================================
 # === GLOBAL ===
@@ -199,66 +198,6 @@ def cv2tensor_full(image: TYPE_IMAGE, matte:TYPE_PIXEL=(0,0,0,255)) -> Tuple[tor
     return rgba, rgb, mask
 
 # ==============================================================================
-# === CLASS SUPPORT ===
-# ==============================================================================
-
-class SpoutSender:
-    def __init__(self, host: str='', fps:int=30, frame:TYPE_PIXEL=None) -> None:
-        self.__fps = self.__width = self.__height = 0
-        self.__frame = None
-        self.frame = frame
-        self.__host = host
-        self.__delay = 0
-        self.fps = max(1, fps)
-        self.__sender = SpoutGL.SpoutSender()
-        self.__sender.setSenderName(self.__host)
-        self.__thread_server = threading.Thread(target=self.__server, daemon=True)
-        self.__thread_server.start()
-        logger.info("STARTED")
-
-    @property
-    def frame(self) -> TYPE_PIXEL:
-        return self.__frame
-
-    @frame.setter
-    def frame(self, image: TYPE_PIXEL) -> None:
-        """Must be RGBA"""
-        self.__frame = image
-
-    @property
-    def host(self) -> str:
-        return self.__host
-
-    @host.setter
-    def host(self, host: str) -> None:
-        if host != self.__host:
-            self.__sender = SpoutGL.SpoutSender()
-            self.__sender.setSenderName(host)
-            self.__host = host
-
-    @property
-    def fps(self) -> int:
-        return self.__fps
-
-    @fps.setter
-    def fps(self, fps: int) -> None:
-        self.__fps = max(1, fps)
-        self.__delay = 1. / fps
-
-    def __server(self) -> None:
-        while 1:
-            if self.__sender is not None:
-                if self.__frame is not None:
-                    h, w = self.__frame.shape[:2]
-                    self.__sender.sendImage(self.__frame, w, h, GL.GL_RGBA, False, 0)
-                self.__sender.setFrameSync(self.__host)
-            time.sleep(self.__delay)
-
-    def __del__(self) -> None:
-        self.__sender = None
-        del self.__sender
-
-# ==============================================================================
 # === COMFYUI NODE ===
 # ==============================================================================
 
@@ -283,10 +222,6 @@ Capture frames from Spout streams. It supports batch processing, allowing multip
             }
         })
         return d
-
-    @classmethod
-    def IS_CHANGED(cls, **kw) -> float:
-        return float('nan')
 
     def run(self, **kw) -> Tuple[torch.Tensor, ...]:
         delta = 1. / kw['fps']
@@ -345,27 +280,49 @@ Sends frame(s) to a specified Spout receiver application for real-time video sha
         d = super().INPUT_TYPES()
         d = deep_merge(d, {
             "required": {
-                "image": (JOV_TYPE_IMAGE, {}),
-                "route": ("STRING", {"default": "Spout Sender"}),
+                'image': (JOV_TYPE_IMAGE, {}),
+                'url': ("STRING", {"default": "Spout Sender", "tooltip": "source of the Spout stream to send."}),
+                'fps': ("INT", {"default": 30, "min": 1, "max": 60, "tooltip":"frames per second to capture."}),
             }
         })
         return d
 
-    @classmethod
-    def IS_CHANGED(cls, **kw) -> float:
-        return float('nan')
-
     def __init__(self, *arg, **kw) -> None:
         super().__init__(*arg, **kw)
-        self.__sender = SpoutSender("")
+        self.__frame = None
+        self.__host = ''
+        self.__delay = 0.05
+        self.__sender = SpoutGL.SpoutSender()
+        self.__thread_server = threading.Thread(target=self.__server, daemon=True)
+        self.__thread_server.start()
+
+    def __server(self) -> None:
+        while 1:
+            try:
+                h, w = self.__frame.shape[:2]
+                self.__sender.sendImage(self.__frame, w, h, GL.GL_RGBA, False, 0)
+                self.__sender.setFrameSync(self.__host)
+                # logger.debug(self.__host)
+            except AttributeError as e:
+                pass
+            finally:
+                time.sleep(self.__delay)
 
     def run(self, **kw) -> None:
-        self.__sender.host = kw['route']
+
+        if kw['url'] != self.__host:
+            if self.__sender is not None:
+                self.__sender.releaseSender()
+            self.__sender = SpoutGL.SpoutSender()
+            self.__host = kw['url']
+            self.__sender.setSenderName(self.__host)
+
+        self.__delay = 1. / min(60, max(1, kw['fps']))
+
         images = kw['image']
         pbar = ProgressBar(len(images))
         for idx, img in enumerate(images):
             img = tensor2cv(img)
-            img = image_convert(img, 4)
-            self.__sender.frame = img
+            self.__frame = image_convert(img, 4)
             pbar.update_absolute(idx)
         return ()
