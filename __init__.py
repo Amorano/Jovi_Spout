@@ -48,6 +48,8 @@ logger.configure(handlers=[{"sink": sys.stdout, "level": JOV_LOG_LEVEL}])
 
 JOV_INTERNAL = os.getenv("JOV_INTERNAL", 'false').strip().lower() in ('true', '1', 't')
 
+JOV_PACKAGE = "Jovi_Spout"
+
 # ==============================================================================
 # === THERE CAN BE ONLY ONE ===
 # ==============================================================================
@@ -68,7 +70,7 @@ class Singleton(type):
 
 class JOVBaseNode:
     NOT_IDEMPOTENT = True
-    CATEGORY = f"JOVI_SPOUT 📺"
+    CATEGORY = f"{JOV_PACKAGE.upper()} 📺"
     RETURN_TYPES = ()
     FUNCTION = "run"
 
@@ -149,38 +151,46 @@ def deep_merge(d1: dict, d2: dict) -> dict:
 # ==============================================================================
 
 def loader():
-    node_count = 0
-    NODE_LIST_MAP = {}
-
     global NODE_DISPLAY_NAME_MAPPINGS, NODE_CLASS_MAPPINGS
+    NODE_LIST_MAP = {}
 
     for fname in ROOT.glob('core/**/*.py'):
         if fname.stem.startswith('_'):
             continue
 
         try:
-            route = str(fname).replace("\\", "/").split("Jovi_Spout/core/")[1]
+            route = str(fname).replace("\\", "/").split(f"{JOV_PACKAGE}/core/")[1]
             route = route.split('.')[0].replace('/', '.')
-            module = f"Jovi_Spout.core.{route}"
+            module = f"{JOV_PACKAGE}.core.{route}"
             module = importlib.import_module(module)
         except Exception as e:
             logger.warning(f"module failed {fname}")
             logger.warning(str(e))
             continue
 
+        # check if there is a dynamic register function....
+        try:
+            for class_name, class_def in module.import_dynamic():
+                setattr(module, class_name, class_def)
+        except Exception as e:
+            pass
+
         classes = inspect.getmembers(module, inspect.isclass)
         for class_name, class_object in classes:
-            # assume both attrs are good enough....
             if not class_name.endswith('BaseNode') and hasattr(class_object, 'NAME') and hasattr(class_object, 'CATEGORY'):
                 name = class_object.NAME
                 NODE_DISPLAY_NAME_MAPPINGS[name] = name
                 NODE_CLASS_MAPPINGS[name] = class_object
                 desc = class_object.DESCRIPTION if hasattr(class_object, 'DESCRIPTION') else name
                 NODE_LIST_MAP[name] = desc.split('.')[0].strip('\n')
-                node_count += 1
 
-        logger.info(f"✅ {module.__name__}")
-    logger.info(f"{node_count} nodes loaded")
+    NODE_CLASS_MAPPINGS = {x[0] : x[1] for x in sorted(NODE_CLASS_MAPPINGS.items(),
+                                                            key=lambda item: getattr(item[1], 'SORT', 0))}
+
+    keys = NODE_CLASS_MAPPINGS.keys()
+    for name in keys:
+        logger.debug(f"✅ {name} :: {NODE_DISPLAY_NAME_MAPPINGS[name]}")
+    logger.info(f"{len(keys)} nodes loaded")
 
     # only do the list on local runs...
     if JOV_INTERNAL:
