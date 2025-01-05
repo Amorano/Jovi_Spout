@@ -1,7 +1,7 @@
 [project]
 name = "jovi_spout"
-description = "."
-version = "1.0.1"
+description = "ComfyUI Nodes for using Spout streams "
+version = "1.0.2"
 license = { file = "LICENSE" }
 dependencies = [
     "aenum",
