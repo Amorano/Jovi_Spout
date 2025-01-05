@@ -28,6 +28,11 @@
 
 ## UPDATES
 
+**2024/01/04** @1.0.1:
+* cleaned up unused JS
+* unified loader for all repositories
+* removed `PILLOW` requirement
+
 **2024/01/03** @1.0.0:
 * initial release
 * reworked [Jovimetrix](https://github.com/amorano/Jovimetrix) Spout support into standalone repository

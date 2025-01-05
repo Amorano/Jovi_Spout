@@ -16,13 +16,13 @@
 @description: SPOUT support for ComfyUI.
 @node list:
     SpoutReaderNode, SpoutWriterNode
-@version: 1.0.0
+@version: 1.0.1
 """
 
 __all__ = ["NODE_CLASS_MAPPINGS", "NODE_DISPLAY_NAME_MAPPINGS", "WEB_DIRECTORY"]
 __author__ = """Alexander G. Morano"""
 __email__ = "amorano@gmail.com"
-__version__ = "1.0.0"
+__version__ = "1.0.1"
 
 import os
 import sys
