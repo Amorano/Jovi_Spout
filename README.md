@@ -28,7 +28,7 @@
 
 ## UPDATES
 
-**2024/01/04** @1.0.1:
+**2024/01/04** @1.0.2:
 * updated project description for registry
 
 **2024/01/04** @1.0.1:
