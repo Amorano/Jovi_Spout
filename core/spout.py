@@ -19,7 +19,11 @@ from loguru import logger
 
 from comfy.utils import ProgressBar
 
-from Jovi_Spout import JOV_TYPE_IMAGE, JOVBaseNode, JOVImageNode, deep_merge
+from .. import JOV_TYPE_ANY, \
+    JOVBaseNode
+
+from ..core import JOVImageNode, \
+    deep_merge
 
 # ==============================================================================
 # === GLOBAL ===
@@ -32,6 +36,8 @@ TYPE_fRGBA = Tuple[float, float, float, float]
 
 TYPE_PIXEL = Union[int, float, TYPE_iRGB, TYPE_iRGBA, TYPE_fRGB, TYPE_fRGBA]
 TYPE_IMAGE = Union[np.ndarray, torch.Tensor]
+
+JOV_TYPE_IMAGE = JOV_TYPE_ANY
 
 # ==============================================================================
 # === ENUMERATION ===
@@ -202,7 +208,7 @@ def cv2tensor_full(image: TYPE_IMAGE, matte:TYPE_PIXEL=(0,0,0,255)) -> Tuple[tor
 # ==============================================================================
 
 class SpoutReaderNode(JOVImageNode):
-    NAME = "SPOUT READER (JOV_SP) 📺"
+    NAME = "SPOUT READER"
     SORT = 50
     DESCRIPTION = """
 Capture frames from Spout streams. It supports batch processing, allowing multiple frames to be captured simultaneously. The node provides options for configuring the source and number of frames to gather. The captured frames are returned as tensors, enabling further processing downstream.
@@ -267,7 +273,7 @@ Capture frames from Spout streams. It supports batch processing, allowing multip
         return [torch.stack(i) for i in zip(*frames)]
 
 class SpoutWriterNode(JOVBaseNode):
-    NAME = "SPOUT WRITER (JOV_SP) 🎥"
+    NAME = "SPOUT WRITER"
     RETURN_TYPES = ()
     OUTPUT_NODE = True
     SORT = 90

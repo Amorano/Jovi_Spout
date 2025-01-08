@@ -28,6 +28,9 @@
 
 ## UPDATES
 
+**2024/01/07** @1.0.3:
+* relative imports
+
 **2024/01/04** @1.0.2:
 * updated project description for registry
 
