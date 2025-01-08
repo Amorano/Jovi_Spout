@@ -1,28 +1,19 @@
 """
-     ██  ██████  ██    ██ ██ ███    ███ ███████ ████████ ██████  ██ ██   ██ 
-     ██ ██    ██ ██    ██ ██ ████  ████ ██         ██    ██   ██ ██  ██ ██  
-     ██ ██    ██ ██    ██ ██ ██ ████ ██ █████      ██    ██████  ██   ███  
-██   ██ ██    ██  ██  ██  ██ ██  ██  ██ ██         ██    ██   ██ ██  ██ ██ 
- █████   ██████    ████   ██ ██      ██ ███████    ██    ██   ██ ██ ██   ██ 
+     ██╗ ██████╗ ██╗   ██╗██╗    ███████╗██████╗  ██████╗ ██╗   ██╗████████╗
+     ██║██╔═══██╗██║   ██║██║    ██╔════╝██╔══██╗██╔═══██╗██║   ██║╚══██╔══╝
+     ██║██║   ██║██║   ██║██║    ███████╗██████╔╝██║   ██║██║   ██║   ██║
+██   ██║██║   ██║╚██╗ ██╔╝██║    ╚════██║██╔═══╝ ██║   ██║██║   ██║   ██║
+╚█████╔╝╚██████╔╝ ╚████╔╝ ██║    ███████║██║     ╚██████╔╝╚██████╔╝   ██║
+ ╚════╝  ╚═════╝   ╚═══╝  ╚═╝    ╚══════╝╚═╝      ╚═════╝  ╚═════╝    ╚═╝
 
-                           SPOUT support for ComfyUI
-                    http://www.github.com/amorano/Jovi_Spout
-
-@title: Jovi_Spout
-@author: Alexander G. Morano
-@category: Stream
-@reference: https://github.com/Amorano/Jovi_Spout
-@tags: Stream, Spout, Media
-@description: SPOUT support for ComfyUI.
-@node list:
-    SpoutReaderNode, SpoutWriterNode
-@version: 1.0.3
+                       SPOUT support for ComfyUI
+                http://www.github.com/amorano/Jovi_Spout
 """
 
 __all__ = ["NODE_CLASS_MAPPINGS", "NODE_DISPLAY_NAME_MAPPINGS", "WEB_DIRECTORY"]
 __author__ = """Alexander G. Morano"""
 __email__ = "amorano@gmail.com"
-__version__ = "1.0.3"
+__version__ = "1.0.4"
 
 import os
 import sys
