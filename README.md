@@ -28,6 +28,11 @@
 
 ## UPDATES
 
+**2024/02/01** @1.0.6:
+* reorganize code layout
+* logo for registry
+* tooltips for all outputs
+
 **2024/01/07** @1.0.3:
 * relative imports
 

@@ -11,9 +11,8 @@
 """
 
 __all__ = ["NODE_CLASS_MAPPINGS", "NODE_DISPLAY_NAME_MAPPINGS", "WEB_DIRECTORY"]
-__author__ = """Alexander G. Morano"""
+__author__ = "Alexander G. Morano"
 __email__ = "amorano@gmail.com"
-__version__ = "1.0.4"
 
 import os
 import sys
@@ -22,9 +21,12 @@ import inspect
 import importlib
 from pathlib import Path
 from types import ModuleType
-from typing import Any
 
 from loguru import logger
+
+# ==============================================================================
+# === GLOBAL ===
+# ==============================================================================
 
 NODE_CLASS_MAPPINGS = {}
 NODE_DISPLAY_NAME_MAPPINGS = {}
@@ -43,56 +45,7 @@ JOV_INTERNAL = os.getenv("JOV_INTERNAL", 'false').strip().lower() in ('true', '1
 JOV_PACKAGE = "JOV_SPOUT"
 
 # ==============================================================================
-# === CORE NODES ===
-# ==============================================================================
-
-class JOVBaseNode:
-    NOT_IDEMPOTENT = True
-    CATEGORY = f"{JOV_PACKAGE} 📺"
-    RETURN_TYPES = ()
-    FUNCTION = "run"
-
-    @classmethod
-    def IS_CHANGED(cls, **kw) -> float:
-        return float('nan')
-
-    @classmethod
-    def VALIDATE_INPUTS(cls, *arg, **kw) -> bool:
-        return True
-
-    @classmethod
-    def INPUT_TYPES(cls, prompt:bool=False, extra_png:bool=False, dynprompt:bool=False) -> dict:
-        data = {
-            "required": {},
-            "hidden": {
-                "ident": "UNIQUE_ID"
-            }
-        }
-        if prompt:
-            data["hidden"]["prompt"] = "PROMPT"
-        if extra_png:
-            data["hidden"]["extra_pnginfo"] = "EXTRA_PNGINFO"
-
-        if dynprompt:
-            data["hidden"]["dynprompt"] = "DYNPROMPT"
-        return data
-
-# ==============================================================================
-# === TYPE ===
-# ==============================================================================
-
-class AnyType(str):
-    """AnyType input wildcard trick taken from pythongossss's:
-
-    https://github.com/pythongosssss/ComfyUI-Custom-Scripts
-    """
-    def __ne__(self, __value: object) -> bool:
-        return False
-
-JOV_TYPE_ANY = AnyType("*")
-
-# ==============================================================================
-# === NODE LOADER ===
+# === SUPPORT ===
 # ==============================================================================
 
 def load_module(name: str) -> None|ModuleType:
@@ -148,5 +101,45 @@ def loader():
     if JOV_INTERNAL:
         with open(str(ROOT) + "/node_list.json", "w", encoding="utf-8") as f:
             json.dump(NODE_LIST_MAP, f, sort_keys=True, indent=4 )
+
+# ==============================================================================
+# === CLASS ===
+# ==============================================================================
+
+class JOVBaseNode:
+    NOT_IDEMPOTENT = True
+    CATEGORY = f"{JOV_PACKAGE} 📺"
+    RETURN_TYPES = ()
+    FUNCTION = "run"
+
+    @classmethod
+    def IS_CHANGED(cls, **kw) -> float:
+        return float('nan')
+
+    @classmethod
+    def VALIDATE_INPUTS(cls, *arg, **kw) -> bool:
+        return True
+
+    @classmethod
+    def INPUT_TYPES(cls, prompt:bool=False, extra_png:bool=False, dynprompt:bool=False) -> dict:
+        data = {
+            "optional": {},
+            "required": {},
+            "hidden": {
+                "ident": "UNIQUE_ID"
+            }
+        }
+        if prompt:
+            data["hidden"]["prompt"] = "PROMPT"
+        if extra_png:
+            data["hidden"]["extra_pnginfo"] = "EXTRA_PNGINFO"
+
+        if dynprompt:
+            data["hidden"]["dynprompt"] = "DYNPROMPT"
+        return data
+
+# ==============================================================================
+# === BOOTSTRAP ===
+# ==============================================================================
 
 loader()

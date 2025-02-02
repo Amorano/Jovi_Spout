@@ -1,8 +1,20 @@
 [project]
 name = "jovi_spout"
 description = "ComfyUI Nodes for using Spout streams "
-version = "1.0.4"
+version = "1.0.5"
 license = { file = "LICENSE" }
+readme = "README.md"
+authors = [{ name = "Alexander G. Morano", email = "amorano@gmail.com" }]
+classifiers = [
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Intended Audience :: Developers",
+]
+requires-python = ">=3.11"
 dependencies = [
     "aenum",
     "loguru",
@@ -15,9 +27,12 @@ dependencies = [
 ]
 
 [project.urls]
+Homepage = "https://github.com/Amorano/Jovi_Spout"
+Documentation = "https://github.com/Amorano/Jovi_Spout/wiki"
 Repository = "https://github.com/Amorano/Jovi_Spout"
+Issues = "https://github.com/Amorano/Jovi_Spout/issues"
 
 [tool.comfy]
 PublisherId = "amorano"
-DisplayName = "Jovi_Spout"
-Icon = ""
+DisplayName = "Jovi Spout"
+Icon = "https://raw.githubusercontent.com/Amorano/Jovimetrix-examples/refs/heads/master/res/logo-jovi_spout.png"
