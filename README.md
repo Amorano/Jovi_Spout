@@ -27,24 +27,26 @@
 * `SPOUT` streaming support *WINDOWS ONLY*
 
 ## UPDATES
+**2025/03/01** @1.0.5:
+* fixed all the year dates in readme since I have been writing 2024! =D
 
-**2024/02/01** @1.0.6:
+**2025/02/01** @1.0.5:
 * reorganize code layout
 * logo for registry
 * tooltips for all outputs
 
-**2024/01/07** @1.0.3:
+**2025/01/07** @1.0.3:
 * relative imports
 
-**2024/01/04** @1.0.2:
+**2025/01/04** @1.0.2:
 * updated project description for registry
 
-**2024/01/04** @1.0.1:
+**2025/01/04** @1.0.1:
 * cleaned up unused JS
 * unified loader for all repositories
 * removed `PILLOW` requirement
 
-**2024/01/03** @1.0.0:
+**2025/01/03** @1.0.0:
 * initial release
 * reworked [Jovimetrix](https://github.com/amorano/Jovimetrix) Spout support into standalone repository
 
