@@ -1,6 +1,5 @@
 """
-Jovi_Spout - http://www.github.com/Amorano/Jovi_Spout
-Core
+Jovi_Spout - Core
 """
 
 from enum import Enum

@@ -1,6 +1,5 @@
 """
-Jovi_Spout - http://www.github.com/amorano/Jovi_Spout
-Device -- SPOUT
+Jovi_Spout - Device -- SPOUT
 """
 
 import time
@@ -26,7 +25,7 @@ from ..core import \
     deep_merge, cv2tensor_full, tensor2cv, image_convert
 
 # ==============================================================================
-# === CORE NODES ===
+# === CLASS ===
 # ==============================================================================
 
 class SpoutReaderNode(JOVImageNode):

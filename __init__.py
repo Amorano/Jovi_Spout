@@ -7,7 +7,6 @@
  ╚════╝  ╚═════╝   ╚═══╝  ╚═╝    ╚══════╝╚═╝      ╚═════╝  ╚═════╝    ╚═╝
 
                        SPOUT support for ComfyUI
-                http://www.github.com/amorano/Jovi_Spout
 """
 
 __all__ = ["NODE_CLASS_MAPPINGS", "NODE_DISPLAY_NAME_MAPPINGS", "WEB_DIRECTORY"]
