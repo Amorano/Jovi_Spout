@@ -127,7 +127,8 @@ Sends frame(s) to a specified Spout receiver application for real-time video sha
         while 1:
             try:
                 h, w = self.__frame.shape[:2]
-                self.__sender.sendImage(self.__frame, w, h, GL.GL_RGBA, False, 0)
+                buffer = np.ascontiguousarray(self.__frame, dtype=np.uint8)
+                self.__sender.sendImage(buffer, w, h, GL.GL_RGBA, False, 0)
                 self.__sender.setFrameSync(self.__host)
                 # logger.debug(self.__host)
             except AttributeError as e:

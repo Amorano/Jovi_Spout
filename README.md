@@ -28,6 +28,9 @@
 
 ## UPDATES
 
+**2025/03/08** @1.0.7:
+* added buffer version for continous array
+
 **2025/03/08** @1.0.6:
 * removed security scanner failures for in-line http links
 
