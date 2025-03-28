@@ -28,6 +28,9 @@
 
 ## UPDATES
 
+**2025/03/08** @1.0.8:
+* updated requirements for numpy to only be >=1.26.4
+
 **2025/03/08** @1.0.7:
 * added buffer version for continous array
 
