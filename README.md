@@ -28,6 +28,9 @@
 
 ## UPDATES
 
+**2025/04/12** @1.0.9:
+* updated requirements for numpy be < 2.0.0
+
 **2025/03/08** @1.0.8:
 * updated requirements for numpy to only be >=1.26.4
 
