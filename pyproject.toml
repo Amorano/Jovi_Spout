@@ -1,7 +1,7 @@
 [project]
 name = "jovi_spout"
 description = "ComfyUI Nodes for using Spout streams "
-version = "1.0.9"
+version = "1.0.10"
 license = { file = "LICENSE" }
 readme = "README.md"
 authors = [{ name = "Alexander G. Morano", email = "amorano@gmail.com" }]
@@ -17,7 +17,7 @@ classifiers = [
 requires-python = ">=3.11"
 dependencies = [
     "aenum",
-    "loguru",
+    "git+https://github.com/cozy-comfyui/cozy_comfyui@main#egg=cozy_comfyui",
     "numpy<2",
     "opencv-contrib-python",
     "PyOpenGL",

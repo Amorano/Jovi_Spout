@@ -5,6 +5,7 @@ Jovi_Spout - Device -- SPOUT
 import time
 import array
 import threading
+from enum import Enum
 from typing import Tuple
 from itertools import repeat
 
@@ -13,22 +14,37 @@ import torch
 import SpoutGL
 import numpy as np
 from OpenGL import GL
-from loguru import logger
 
 from comfy.utils import ProgressBar
 
-from .. import \
-    JOVBaseNode
+from cozy_comfyui import \
+    logger, \
+    deep_merge
 
-from ..core import \
-    EnumInterpolation, JOVImageNode, \
-    deep_merge, cv2tensor_full, tensor2cv, image_convert
+from cozy_comfyui.node import \
+    CozyBaseNode, CozyImageNode
+
+from cozy_comfyui.image.convert import \
+    cv_to_tensor_full, tensor_to_cv, image_convert
+
+# ==============================================================================
+# === ENUMERATION ===
+# ==============================================================================
+
+class EnumInterpolation(Enum):
+    NEAREST = cv2.INTER_NEAREST
+    LINEAR = cv2.INTER_LINEAR
+    CUBIC = cv2.INTER_CUBIC
+    AREA = cv2.INTER_AREA
+    LANCZOS4 = cv2.INTER_LANCZOS4
+    LINEAR_EXACT = cv2.INTER_LINEAR_EXACT
+    NEAREST_EXACT = cv2.INTER_NEAREST_EXACT
 
 # ==============================================================================
 # === CLASS ===
 # ==============================================================================
 
-class SpoutReaderNode(JOVImageNode):
+class SpoutReaderNode(CozyImageNode):
     NAME = "SPOUT READER"
     SORT = 50
     DESCRIPTION = """
@@ -51,20 +67,24 @@ Capture frames from Spout streams. It supports batch processing, allowing multip
         return d
 
     def run(self, **kw) -> Tuple[torch.Tensor, ...]:
-        delta = 1. / kw['fps']
-        count = kw['batch']
-        sample = EnumInterpolation[kw['sample']].value
-        blank = np.zeros((kw['width'], kw['height'], 4), dtype=np.uint8)
+        delta = 1. / kw['fps'][0]
+        count = kw['batch'][0]
+        sample = kw['sample'][0]
+        width = kw['width'][0]
+        height = kw['height'][0]
+        url = kw['url'][0]
+        sample = EnumInterpolation[sample].value
+        blank = np.zeros((width, height, 4), dtype=np.uint8)
         frames = [blank] * count
         width = height = 0
         buffer = None
         idx = 0
         pbar = ProgressBar(count)
         with SpoutGL.SpoutReceiver() as receiver:
-            receiver.setReceiverName(kw['url'])
+            receiver.setReceiverName(url)
             while idx <= count:
                 waste = time.perf_counter() + delta
-                receiver.waitFrameSync(kw['url'], 0)
+                receiver.waitFrameSync(url, 0)
                 if buffer is None or receiver.isUpdated():
                     width = receiver.getSenderWidth()
                     height = receiver.getSenderHeight()
@@ -86,14 +106,14 @@ Capture frames from Spout streams. It supports batch processing, allowing multip
                     if count > 1:
                         time.sleep(waste)
                 buffer = None
-                receiver.setFrameSync(kw['url'])
+                receiver.setFrameSync(url)
                 pbar.update_absolute(idx)
 
-        frames = [cv2tensor_full(cv2.resize(i, (kw['width'], kw['height']),
+        frames = [cv_to_tensor_full(cv2.resize(i, (width, height),
                                             interpolation=sample)) for i in frames]
         return [torch.stack(i) for i in zip(*frames)]
 
-class SpoutWriterNode(JOVBaseNode):
+class SpoutWriterNode(CozyBaseNode):
     NAME = "SPOUT WRITER"
     RETURN_TYPES = ()
     OUTPUT_NODE = True
@@ -138,19 +158,20 @@ Sends frame(s) to a specified Spout receiver application for real-time video sha
 
     def run(self, **kw) -> None:
 
-        if kw['url'] != self.__host:
+        if (url := kw['url'][0]) != self.__host:
             if self.__sender is not None:
                 self.__sender.releaseSender()
             self.__sender = SpoutGL.SpoutSender()
-            self.__host = kw['url']
+            self.__host = url
             self.__sender.setSenderName(self.__host)
 
-        self.__delay = 1. / min(60, max(1, kw['fps']))
+        fps = kw['fps'][0]
+        self.__delay = 1. / min(60, max(1, fps))
 
         images = kw['image']
         pbar = ProgressBar(len(images))
         for idx, img in enumerate(images):
-            img = tensor2cv(img)
+            img = tensor_to_cv(img)
             self.__frame = image_convert(img, 4)
             pbar.update_absolute(idx)
         return ()

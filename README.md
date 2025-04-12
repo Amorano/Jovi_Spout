@@ -28,6 +28,9 @@
 
 ## UPDATES
 
+**2025/04/12** @1.0.10:
+* core supports switched to [cozy_comfyui](https://github.com/cozy-comfyui/cozy_comfyui)
+
 **2025/04/12** @1.0.9:
 * updated requirements for numpy be < 2.0.0
 
