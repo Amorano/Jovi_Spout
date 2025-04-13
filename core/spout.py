@@ -13,6 +13,7 @@ from comfy.utils import ProgressBar
 
 from cozy_comfyui import \
     logger, \
+    IMAGE_SIZE_MIN, IMAGE_SIZE_MAX, IMAGE_SIZE_DEFAULT, \
     RGBAMaskType, \
     deep_merge
 
@@ -43,11 +44,12 @@ Capture frames from Spout streams. It supports batch processing, allowing multip
         d = deep_merge(d, {
             "required": {
                 'url': ("STRING", {"default": "Spout Graphics Sender", "dynamicPrompts": False, "tooltip": "source of the Spout stream to capture."}),
-                'width': ("INT", {"default": 512, "min": 32, "max": 2048, "tooltip":"width of image after reading from Spout stream."}),
-                'height': ("INT", {"default": 512, "min": 32, "max": 2048, "tooltip":"height of image after reading from Spout stream."}),
+                'width': ("INT", {"default": IMAGE_SIZE_DEFAULT, "min": IMAGE_SIZE_MIN, "max": IMAGE_SIZE_MAX, "tooltip":"width of image after reading from Spout stream."}),
+                'height': ("INT", {"default": IMAGE_SIZE_DEFAULT, "min": IMAGE_SIZE_MIN, "max": IMAGE_SIZE_MAX, "tooltip":"height of image after reading from Spout stream."}),
                 'fps': ("INT", {"default": 30, "min": 1, "max": 60, "tooltip":"frames per second to capture."}),
                 'sample': (EnumInterpolation._member_names_, {"default": EnumInterpolation.LANCZOS4.name, "tooltip":"If the images is smaller or larger, the interpolation method to rescale the stream image."}),
-                'batch': ("INT", {"default": 1, "min": 1, "max": 1024, "tooltip": "collect multiple frames at once."}),
+                'batch': ("INT", {"default": 1, "min": 1, "max": 3600, "tooltip": "collect multiple frames at once."}),
+                'timeout': ("INT", {"default": 5, "min": 2, "max": 10, "tooltip": "time (in seconds) to wait reading the source before timing out"}),
             }
         })
         return d
@@ -58,43 +60,49 @@ Capture frames from Spout streams. It supports batch processing, allowing multip
         sample = kw['sample'][0]
         width = kw['width'][0]
         height = kw['height'][0]
+        timeout = kw['timeout'][0]
         url = kw['url'][0]
-        sample = EnumInterpolation[sample].value
         blank = np.zeros((width, height, 4), dtype=np.uint8)
         frames = [blank] * count
-        width = height = 0
+        w = h = 0
         buffer = None
         idx = 0
         pbar = ProgressBar(count)
         with SpoutGL.SpoutReceiver() as receiver:
             receiver.setReceiverName(url)
+            timeout_spent = 0
             while idx <= count:
-                waste = time.perf_counter() + delta
+                timeout_counter = time.perf_counter()
+                waste = timeout_counter + delta
                 receiver.waitFrameSync(url, 0)
                 if buffer is None or receiver.isUpdated():
-                    width = receiver.getSenderWidth()
-                    height = receiver.getSenderHeight()
-                    buffer = array.array('B', repeat(0, width * height * 4))
-                    # logger.debug(f"{width} x {height}")
-                    # logger.debug("changed")
+                    w = receiver.getSenderWidth()
+                    h = receiver.getSenderHeight()
+                    buffer = array.array('B', repeat(0, w * h * 4))
 
                 result = receiver.receiveImage(buffer, GL.GL_RGBA, False, 0)
                 if result:
                     if SpoutGL.helpers.isBufferEmpty(buffer):
-                        logger.debug("empty")
+                        # logger.debug("empty")
                         continue
 
                     if idx > 0:
-                        frames[idx-1] = np.asarray(buffer, dtype=np.uint8).reshape((height, width, 4))
+                        frames[idx-1] = np.asarray(buffer, dtype=np.uint8).reshape((h, w, 4))
                     waste = max(waste - time.perf_counter(), 0)
-                    # logger.debug(f"{idx-1} - {waste}")
                     idx += 1
                     if count > 1:
                         time.sleep(waste)
-                buffer = None
-                receiver.setFrameSync(url)
-                pbar.update_absolute(idx)
+                    buffer = None
+                    receiver.setFrameSync(url)
+                    pbar.update_absolute(idx)
+                    timeout_spent = 0
+                else:
+                    timeout_spent += (time.perf_counter() - timeout_counter)
+                    if timeout_spent >= timeout:
+                        logger.error(f"timeout reading SPOUT stream {url}")
+                        return ()
 
+        sample = EnumInterpolation[sample].value
         frames = [cv_to_tensor_full(image_resize(i, width, height, sample)) for i in frames]
         return image_stack(frames)
 
