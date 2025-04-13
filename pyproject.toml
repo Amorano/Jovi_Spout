@@ -19,7 +19,6 @@ dependencies = [
     "aenum",
     "git+https://github.com/cozy-comfyui/cozy_comfyui@main#egg=cozy_comfyui",
     "numpy<2",
-    "opencv-contrib-python",
     "PyOpenGL",
     "PyOpenGL-accelerate; python_version < '3.12'",
     "SpoutGL; platform_system==\"Windows\"",

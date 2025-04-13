@@ -1,15 +1,11 @@
-"""
-Jovi_Spout - Device -- SPOUT
-"""
+""" Jovi_Spout - Device -- SPOUT """
 
 import time
 import array
 import threading
-from enum import Enum
 from typing import Tuple
 from itertools import repeat
 
-import cv2
 import torch
 import SpoutGL
 import numpy as np
@@ -27,18 +23,8 @@ from cozy_comfyui.node import \
 from cozy_comfyui.image.convert import \
     cv_to_tensor_full, tensor_to_cv, image_convert
 
-# ==============================================================================
-# === ENUMERATION ===
-# ==============================================================================
-
-class EnumInterpolation(Enum):
-    NEAREST = cv2.INTER_NEAREST
-    LINEAR = cv2.INTER_LINEAR
-    CUBIC = cv2.INTER_CUBIC
-    AREA = cv2.INTER_AREA
-    LANCZOS4 = cv2.INTER_LANCZOS4
-    LINEAR_EXACT = cv2.INTER_LINEAR_EXACT
-    NEAREST_EXACT = cv2.INTER_NEAREST_EXACT
+from cozy_comfyui.image.misc import \
+    image_resize
 
 # ==============================================================================
 # === CLASS ===
@@ -109,8 +95,7 @@ Capture frames from Spout streams. It supports batch processing, allowing multip
                 receiver.setFrameSync(url)
                 pbar.update_absolute(idx)
 
-        frames = [cv_to_tensor_full(cv2.resize(i, (width, height),
-                                            interpolation=sample)) for i in frames]
+        frames = [cv_to_tensor_full(image_resize(i, width, height, sample)) for i in frames]
         return [torch.stack(i) for i in zip(*frames)]
 
 class SpoutWriterNode(CozyBaseNode):
