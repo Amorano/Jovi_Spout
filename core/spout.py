@@ -3,10 +3,8 @@
 import time
 import array
 import threading
-from typing import Tuple
 from itertools import repeat
 
-import torch
 import SpoutGL
 import numpy as np
 from OpenGL import GL
@@ -15,6 +13,7 @@ from comfy.utils import ProgressBar
 
 from cozy_comfyui import \
     logger, \
+    RGBAMaskType, \
     deep_merge
 
 from cozy_comfyui.node import \
@@ -24,7 +23,8 @@ from cozy_comfyui.image.convert import \
     cv_to_tensor_full, tensor_to_cv, image_convert
 
 from cozy_comfyui.image.misc import \
-    image_resize
+    EnumInterpolation, \
+    image_resize, image_stack
 
 # ==============================================================================
 # === CLASS ===
@@ -52,7 +52,7 @@ Capture frames from Spout streams. It supports batch processing, allowing multip
         })
         return d
 
-    def run(self, **kw) -> Tuple[torch.Tensor, ...]:
+    def run(self, **kw) -> RGBAMaskType:
         delta = 1. / kw['fps'][0]
         count = kw['batch'][0]
         sample = kw['sample'][0]
@@ -96,7 +96,7 @@ Capture frames from Spout streams. It supports batch processing, allowing multip
                 pbar.update_absolute(idx)
 
         frames = [cv_to_tensor_full(image_resize(i, width, height, sample)) for i in frames]
-        return [torch.stack(i) for i in zip(*frames)]
+        return image_stack(frames)
 
 class SpoutWriterNode(CozyBaseNode):
     NAME = "SPOUT WRITER"
