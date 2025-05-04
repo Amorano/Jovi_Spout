@@ -17,6 +17,9 @@ from cozy_comfyui import \
     RGBAMaskType, \
     deep_merge
 
+from cozy_comfyui.lexicon import \
+    Lexicon
+
 from cozy_comfyui.node import \
     CozyBaseNode, CozyImageNode
 
@@ -43,25 +46,37 @@ Capture frames from Spout streams. It supports batch processing, allowing multip
         d = super().INPUT_TYPES()
         d = deep_merge(d, {
             "required": {
-                'url': ("STRING", {"default": "Spout Graphics Sender", "dynamicPrompts": False, "tooltip": "source of the Spout stream to capture."}),
-                'width': ("INT", {"default": IMAGE_SIZE_DEFAULT, "min": IMAGE_SIZE_MIN, "max": IMAGE_SIZE_MAX, "tooltip":"width of image after reading from Spout stream."}),
-                'height': ("INT", {"default": IMAGE_SIZE_DEFAULT, "min": IMAGE_SIZE_MIN, "max": IMAGE_SIZE_MAX, "tooltip":"height of image after reading from Spout stream."}),
-                'fps': ("INT", {"default": 30, "min": 1, "max": 60, "tooltip":"frames per second to capture."}),
-                'sample': (EnumInterpolation._member_names_, {"default": EnumInterpolation.LANCZOS4.name, "tooltip":"If the images is smaller or larger, the interpolation method to rescale the stream image."}),
-                'batch': ("INT", {"default": 1, "min": 1, "max": 3600, "tooltip": "collect multiple frames at once."}),
-                'timeout': ("INT", {"default": 5, "min": 2, "max": 10, "tooltip": "time (in seconds) to wait reading the source before timing out"}),
+                Lexicon.URL: ("STRING", {
+                    "default": "Spout Graphics Sender", "dynamicPrompts": False,
+                    "tooltip": "Source of the Spout stream to capture."}),
+                Lexicon.WIDTH: ("INT", {
+                    "default": IMAGE_SIZE_DEFAULT, "min": IMAGE_SIZE_MIN, "max": IMAGE_SIZE_MAX,
+                    "tooltip":"Width of image after reading from Spout stream."}),
+                Lexicon.HEIGHT: ("INT", {
+                    "default": IMAGE_SIZE_DEFAULT, "min": IMAGE_SIZE_MIN, "max": IMAGE_SIZE_MAX,
+                    "tooltip":"Height of image after reading from Spout stream."}),
+                Lexicon.FPS: ("INT", {
+                    "default": 30, "min": 1, "max": 60}),
+                Lexicon.SAMPLE: (EnumInterpolation._member_names_, {
+                    "default": EnumInterpolation.LANCZOS4.name,
+                    "tooltip":"If the images is smaller or larger, the interpolation method to rescale the stream image."}),
+                Lexicon.BATCH: ("INT", {
+                    "default": 1, "min": 1, "max": 3600,
+                    "tooltip": "Collect multiple frames at once."}),
+                Lexicon.TIMEOUT: ("INT", {
+                    "default": 5, "min": 2, "max": 10,}),
             }
         })
-        return d
+        return Lexicon._parse(d)
 
     def run(self, **kw) -> RGBAMaskType:
-        delta = 1. / kw['fps'][0]
-        count = kw['batch'][0]
-        sample = kw['sample'][0]
-        width = kw['width'][0]
-        height = kw['height'][0]
-        timeout = kw['timeout'][0]
-        url = kw['url'][0]
+        delta = 1. / kw[Lexicon.FPS][0]
+        count = kw[Lexicon.BATCH][0]
+        sample = kw[Lexicon.SAMPLE][0]
+        width = kw[Lexicon.WIDTH][0]
+        height = kw[Lexicon.HEIGHT][0]
+        timeout = kw[Lexicon.TIMEOUT][0]
+        url = kw[Lexicon.URL][0]
         blank = np.zeros((width, height, 4), dtype=np.uint8)
         frames = [blank] * count
         w = h = 0
@@ -120,12 +135,16 @@ Sends frame(s) to a specified Spout receiver application for real-time video sha
         d = super().INPUT_TYPES()
         d = deep_merge(d, {
             "required": {
-                'image': ("IMAGE", {"default": None, "tooltip": "RGBA, RGB or Grayscale image"}),
-                'url': ("STRING", {"default": "Spout Sender", "tooltip": "source of the Spout stream to send."}),
-                'fps': ("INT", {"default": 30, "min": 1, "max": 60, "tooltip":"frames per second to capture."}),
+                Lexicon.IMAGE: ("IMAGE", {
+                    "default": None}),
+                Lexicon.URL: ("STRING", {
+                    "default": "Spout Sender",
+                    "tooltip": "source of the Spout stream to send."}),
+                Lexicon.FPS: ("INT", {
+                    "default": 30, "min": 1, "max": 60}),
             }
         })
-        return d
+        return Lexicon._parse(d)
 
     def __init__(self, *arg, **kw) -> None:
         super().__init__(*arg, **kw)
@@ -151,17 +170,17 @@ Sends frame(s) to a specified Spout receiver application for real-time video sha
 
     def run(self, **kw) -> None:
 
-        if (url := kw['url'][0]) != self.__host:
+        if (url := kw[Lexicon.URL][0]) != self.__host:
             if self.__sender is not None:
                 self.__sender.releaseSender()
             self.__sender = SpoutGL.SpoutSender()
             self.__host = url
             self.__sender.setSenderName(self.__host)
 
-        fps = kw['fps'][0]
+        fps = kw[Lexicon.FPS][0]
         self.__delay = 1. / min(60, max(1, fps))
 
-        images = kw['image']
+        images = kw[Lexicon.IMAGE]
         pbar = ProgressBar(len(images))
         for idx, img in enumerate(images):
             img = tensor_to_cv(img)
