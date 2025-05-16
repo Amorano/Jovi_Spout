@@ -26,9 +26,12 @@ from cozy_comfyui.node import \
 from cozy_comfyui.image.convert import \
     cv_to_tensor_full, tensor_to_cv, image_convert
 
-from cozy_comfyui.image.misc import \
+from cozy_comfyui.image.compose import \
     EnumInterpolation, \
-    image_resize, image_stack
+    image_resize
+
+from cozy_comfyui.image.misc import \
+    image_stack
 
 # ==============================================================================
 # === CLASS ===
