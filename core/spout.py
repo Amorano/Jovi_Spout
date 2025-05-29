@@ -14,13 +14,14 @@ from comfy.utils import ProgressBar
 from cozy_comfyui import \
     logger, \
     IMAGE_SIZE_MIN, IMAGE_SIZE_MAX, IMAGE_SIZE_DEFAULT, \
-    RGBAMaskType, \
-    deep_merge
+    RGBAMaskType, EnumConvertType, \
+    deep_merge, parse_param
 
 from cozy_comfyui.lexicon import \
     Lexicon
 
 from cozy_comfyui.node import \
+    COZY_TYPE_IMAGE, \
     CozyBaseNode, CozyImageNode
 
 from cozy_comfyui.image.convert import \
@@ -138,7 +139,7 @@ Sends frame(s) to a specified Spout receiver application for real-time video sha
         d = super().INPUT_TYPES()
         d = deep_merge(d, {
             "required": {
-                Lexicon.IMAGE: ("IMAGE", {
+                Lexicon.IMAGE: (COZY_TYPE_IMAGE, {
                     "default": None}),
                 Lexicon.URL: ("STRING", {
                     "default": "Spout Sender",
@@ -180,10 +181,10 @@ Sends frame(s) to a specified Spout receiver application for real-time video sha
             self.__host = url
             self.__sender.setSenderName(self.__host)
 
-        fps = kw[Lexicon.FPS][0]
-        self.__delay = 1. / min(60, max(1, fps))
+        fps = parse_param(kw, Lexicon.FPS, EnumConvertType.FLOAT, 30, 1, 60)[0]
+        self.__delay = 1. / fps
 
-        images = kw[Lexicon.IMAGE]
+        images = parse_param(kw, Lexicon.IMAGE, EnumConvertType.IMAGE, None)
         pbar = ProgressBar(len(images))
         for idx, img in enumerate(images):
             self.__frame = tensor_to_cv(img, chan=4)

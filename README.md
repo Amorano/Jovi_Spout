@@ -28,6 +28,10 @@
 
 ## UPDATES
 
+**2025/05/29** @1.1.3:
+* cleaner image processing
+* updated to comfy_cozy 0.0.32
+
 **2025/05/29** @1.1.2:
 * updated to comfy_cozy 0.0.31
 
