@@ -28,6 +28,9 @@
 
 ## UPDATES
 
+**2025/05/29** @1.1.2:
+* updated to comfy_cozy 0.0.31
+
 **2025/05/16** @1.1.1:
 * updated to comfy_cozy 0.0.25
 

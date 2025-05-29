@@ -24,7 +24,7 @@ from cozy_comfyui.node import \
     CozyBaseNode, CozyImageNode
 
 from cozy_comfyui.image.convert import \
-    cv_to_tensor_full, tensor_to_cv, image_convert
+    cv_to_tensor_full, tensor_to_cv
 
 from cozy_comfyui.image.compose import \
     EnumInterpolation, \
@@ -186,7 +186,6 @@ Sends frame(s) to a specified Spout receiver application for real-time video sha
         images = kw[Lexicon.IMAGE]
         pbar = ProgressBar(len(images))
         for idx, img in enumerate(images):
-            img = tensor_to_cv(img)
-            self.__frame = image_convert(img, 4)
+            self.__frame = tensor_to_cv(img, chan=4)
             pbar.update_absolute(idx)
         return ()
