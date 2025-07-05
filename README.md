@@ -28,6 +28,10 @@
 
 ## UPDATES
 
+**2025/05/29** @1.1.4:
+* fixed non-continuous spout reader (IS_CHANGED)
+* updated to comfy_cozy 0.0.38
+
 **2025/05/29** @1.1.3:
 * cleaner image processing
 * updated to comfy_cozy 0.0.32

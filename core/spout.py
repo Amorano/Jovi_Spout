@@ -73,6 +73,10 @@ Capture frames from Spout streams. It supports batch processing, allowing multip
         })
         return Lexicon._parse(d)
 
+    @classmethod
+    def IS_CHANGED(cls, **kw) -> float:
+        return float('nan')
+
     def run(self, **kw) -> RGBAMaskType:
         delta = 1. / kw[Lexicon.FPS][0]
         count = kw[Lexicon.BATCH][0]
