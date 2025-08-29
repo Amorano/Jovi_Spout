@@ -1,7 +1,7 @@
 <div align="center">
 
 <picture>
-  <source srcset="https://github.com/Amorano/Jovi_Spout-examples/blob/master/res/Jovi_Spout.png">
+  <source srcset="https://github.com/Amorano/Jovimetrix-examples/blob/master/res/logo-jovi_spout.png">
   <img alt="ComfyUI Nodes for using Spout streams" width="256" height="256">
 </picture>
 
